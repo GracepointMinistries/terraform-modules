@@ -5,8 +5,6 @@ package test
 import (
 	"testing"
 
-	// http_helper "github.com/gruntwork-io/terratest/modules/http-helper"
-
 	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/require"
