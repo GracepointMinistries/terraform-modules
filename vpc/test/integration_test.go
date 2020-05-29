@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/require"
 )
@@ -21,6 +22,7 @@ type VPCInfo struct {
 func TestVPCModuleIntegration(t *testing.T) {
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../example",
+		Logger:       logger.Discard,
 	}
 
 	defer terraform.Destroy(t, terraformOptions)
