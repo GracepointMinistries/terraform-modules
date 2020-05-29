@@ -12,3 +12,7 @@ module "vpc" {
     Name = "example vpc"
   }
 }
+
+output "vpc_info" {
+  value = jsonencode(module.vpc)
+}

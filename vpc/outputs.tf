@@ -1,6 +1,5 @@
 output "vpc" {
-  value     = aws_vpc.vpc.id
-  sensitive = true
+  value = aws_vpc.vpc.id
 }
 
 output "azs" {
