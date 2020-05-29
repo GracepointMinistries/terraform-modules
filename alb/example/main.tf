@@ -9,7 +9,7 @@ module "vpc" {
   azs    = ["us-east-1a", "us-east-1b"]
   subnet = "10.0.0.0/16"
   tags = {
-    Name = "example vpc"
+    Testing = "example alb"
   }
 }
 
@@ -19,10 +19,10 @@ module "alb" {
   vpc_id               = module.vpc.vpc
   subnets              = module.vpc.subnet_ids
   security_groups      = [module.vpc.security_group]
-  domain               = "testing.gracepointonline.org"
+  domain               = "testing1.gracepointonline.org"
   force_destroy_bucket = true
   tags = {
-    Name = "example alb"
+    Testing = "example alb"
   }
 }
 

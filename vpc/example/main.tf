@@ -9,7 +9,7 @@ module "vpc" {
   azs    = ["us-east-1a", "us-east-1b"]
   subnet = "10.0.0.0/16"
   tags = {
-    Name = "example vpc"
+    Testing = "example vpc"
   }
 }
 

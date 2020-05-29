@@ -1,0 +1,146 @@
+#cloud-config
+
+write_files:
+  - content: |
+      IAM_AUTHORIZED_GROUPS="${iam_group}"
+      LOCAL_MARKER_GROUP="${iam_group}"
+      LOCAL_GROUPS="docker"
+      SUDOERS_GROUPS="${iam_group}"
+    path: /etc/aws-ec2-ssh.conf.new
+  - content: |
+      ECS_DATADIR=/data
+      ECS_ENABLE_TASK_IAM_ROLE=true
+      ECS_ENABLE_TASK_IAM_ROLE_NETWORK_HOST=true
+      ECS_LOGFILE=/log/ecs-agent.log
+      ECS_AVAILABLE_LOGGING_DRIVERS=["json-file","awslogs"]
+      ECS_LOGLEVEL=info
+      ECS_CLUSTER=${ecs_cluster_name}
+      ECS_CONTAINER_STOP_TIMEOUT=30s
+    path: /etc/ecs/ecs.config
+  - content: |
+      #!/bin/sh
+
+      die() { echo "$*" 1>&2 ; exit 1; }
+
+      EC2_INSTANCE_ID="`wget -q -O - http://169.254.169.254/latest/meta-data/instance-id || die \"wget instance-id has failed: $?\"`"
+
+      file -s /dev/xvdq | grep "/dev/xvdq: cannot open (No such file or directory)" > /dev/null
+      exit_status=$?
+      if [ $exit_status -eq 0 ]; then
+        aws --region ${region} ec2 attach-volume --volume-id ${ebs_volume} --instance-id $EC2_INSTANCE_ID --device /dev/xvdq
+
+        DATA_STATE="unknown"
+        until [ "$${DATA_STATE}" == "attached" ]; do
+          DATA_STATE=$(aws ec2 describe-volumes --region ${region} --filters Name=attachment.instance-id,Values=$EC2_INSTANCE_ID Name=attachment.device,Values=/dev/xvdq --query Volumes[].Attachments[].State --output text)
+          sleep 5
+        done
+      fi
+
+      MOUNTED="/dev/xvdq"
+      file -s /dev/xvdq | grep "symbolic" > /dev/null
+      exit_status=$?
+      if [ $exit_status -eq 0 ]; then
+        MOUNTED=`readlink -f /dev/xvdq`
+      fi
+      if [[ $(lsblk -no FSTYPE $MOUNTED) != xfs ]]; then
+          mkfs -t xfs /dev/xvdq
+      fi
+
+      cat /etc/fstab | grep "/dev/xvdq"
+      exit_status=$?
+      if [ $exit_status -eq 1 ]; then
+        echo "/dev/xvdq /data xfs defaults,nofail 0 2" >> /etc/fstab
+      fi
+
+      mkdir -p /data
+      mount -a
+
+    path: /usr/local/bin/mount-ebs
+    permissions: '0755'
+  - content: |
+      #!/bin/sh
+
+      die() { echo "$*" 1>&2 ; exit 1; }
+
+      EC2_INSTANCE_ID="`wget -q -O - http://169.254.169.254/latest/meta-data/instance-id || die \"wget instance-id has failed: $?\"`"
+
+      aws ec2 associate-address --instance-id $EC2_INSTANCE_ID --allocation-id "${eip}" --region ${region} || die "aws ec2 associate-address '${eip}' failed"
+    path: /usr/local/bin/attach-eip
+    permissions: '0755'
+  - content: |
+      #!/usr/bin/env bash
+      #
+      # set-hostname
+      #
+      # Sets up system hostname and ec2 Name tags
+
+      if [[ $EUID -ne 0 ]]; then
+        >&2 echo "ERROR set-hostname - must be run as root"
+        exit 1
+      fi
+
+      source /etc/environment
+
+      if [[ -z "$EC2HOST_PREFIX" ]]; then
+        >&2 echo "ERROR set-hostname - required env vars missing"
+        exit 1
+      fi
+
+      export AWS_DEFAULT_REGION=`wget -q -O - http://169.254.169.254/latest/meta-data/placement/availability-zone | sed 's/[a-z]$//'`
+
+      LOCAL_IPV4_DASH=`wget -q -O - http://169.254.169.254/latest/meta-data/local-ipv4 | tr . -`
+      INSTANCE_ID=`wget -q -O - http://169.254.169.254/latest/meta-data/instance-id`
+
+      EC2HOST_HOSTNAME=$EC2HOST_PREFIX-$LOCAL_IPV4_DASH
+
+      # Set content of /etc/hosts
+      cat <<EOF > /etc/hosts
+      127.0.0.1 $EC2HOST_HOSTNAME localhost localhost.localdomain
+      # The following lines are desirable for IPv6 capable hosts
+      ::1 ip6-localhost ip6-loopback
+      fe00::0 ip6-localnet
+      ff00::0 ip6-mcastprefix
+      ff02::1 ip6-allnodes
+      ff02::2 ip6-allrouters
+      ff02::3 ip6-allhosts
+      EOF
+
+      # Set content of /etc/hostname
+      echo $EC2HOST_HOSTNAME > /etc/hostname
+
+      # Set hostname itself
+      hostname $EC2HOST_HOSTNAME
+
+      aws ec2 create-tags --resources $INSTANCE_ID --tags Key=Name,Value=$EC2HOST_HOSTNAME
+
+      if [[ "$?" -ne "0" ]]; then
+        >&2 echo "ERROR set-hostname - failed to set ec2 Name tag"
+        exit 1
+      fi
+
+      exit 0
+    path: /usr/local/bin/set-hostname
+    permissions: '0755'
+  - content: |
+      EC2HOST_PREFIX="${ecs_cluster_name}"
+    path: /etc/environment
+
+runcmd:
+  - [sh, -c, 'yum update -y']
+  - [sh, -c, 'amazon-linux-extras disable docker']
+  - [sh, -c, 'amazon-linux-extras install -y ecs']
+  - [sh, -c, 'yum install -y awscli wget ecs-init']
+  - [
+      sh,
+      -c,
+      'rpm -i https://s3-eu-west-1.amazonaws.com/widdix-aws-ec2-ssh-releases-eu-west-1/aws-ec2-ssh-1.9.2-1.el7.centos.noarch.rpm',
+    ]
+  - [sh, -c, 'mv /etc/aws-ec2-ssh.conf.new /etc/aws-ec2-ssh.conf']
+  - [sh, -c, '/usr/bin/import_users.sh']
+  - [sh, -c, '/usr/local/bin/attach-eip']
+  - [sh, -c, '/usr/local/bin/mount-ebs']
+  - [sh, -c, '/usr/local/bin/set-hostname']
+  - [sh, -c, 'systemctl restart --no-block ecs']
+
+output:
+  all: '| tee -a /var/log/cloud-init-output.log'
