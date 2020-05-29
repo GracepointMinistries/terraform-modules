@@ -21,6 +21,9 @@ module "alb" {
   security_groups      = [module.vpc.security_group]
   domain               = "testing.gracepointonline.org"
   force_destroy_bucket = true
+  tags = {
+    Name = "example alb"
+  }
 }
 
 output "alb_info" {
