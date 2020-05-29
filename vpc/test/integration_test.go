@@ -4,7 +4,6 @@ package test
 
 import (
 	"encoding/json"
-	"log"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/aws"
@@ -31,7 +30,6 @@ func TestVPCModuleIntegration(t *testing.T) {
 	output := terraform.Output(t, terraformOptions, "vpc_info")
 
 	var vpcInfo VPCInfo
-	log.Println(output)
 	require.NoError(t, json.Unmarshal([]byte(output), &vpcInfo))
 
 	require.Equal(t, []string{"us-east-1a", "us-east-1b"}, vpcInfo.AvailabilityZones)

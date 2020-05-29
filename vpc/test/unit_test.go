@@ -5,6 +5,7 @@ package test
 import (
 	"testing"
 
+	"github.com/gruntwork-io/terratest/modules/logger"
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/stretchr/testify/require"
 )
@@ -12,6 +13,7 @@ import (
 func TestVPCModuleUnit(t *testing.T) {
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../example",
+		Logger:       logger.Discard,
 	}
 
 	terraform.Init(t, terraformOptions)
