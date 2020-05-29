@@ -20,5 +20,5 @@ func TestECSInstanceModuleUnit(t *testing.T) {
 	output := terraform.InitAndPlan(t, terraformOptions)
 
 	// total resources
-	require.Contains(t, output, "34 to add, 0 to change, 0 to destroy")
+	require.Contains(t, output, "35 to add, 0 to change, 0 to destroy")
 }
