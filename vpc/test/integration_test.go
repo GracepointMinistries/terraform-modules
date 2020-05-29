@@ -16,6 +16,7 @@ type VPCInfo struct {
 	ID                string   `json:"vpc"`
 	AvailabilityZones []string `json:"azs"`
 	Subnets           []string `json:"subnet_ids"`
+	SecurityGroup     string   `json:"security_group"`
 }
 
 func TestVPCModuleIntegration(t *testing.T) {
@@ -32,6 +33,7 @@ func TestVPCModuleIntegration(t *testing.T) {
 	var vpcInfo VPCInfo
 	require.NoError(t, json.Unmarshal([]byte(output), &vpcInfo))
 
+	require.NotEqual(t, "", vpcInfo.SecurityGroup)
 	require.Equal(t, []string{"us-east-1a", "us-east-1b"}, vpcInfo.AvailabilityZones)
 	require.Len(t, vpcInfo.Subnets, 2)
 

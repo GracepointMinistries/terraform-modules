@@ -24,5 +24,5 @@ func TestVPCModuleUnit(t *testing.T) {
 	// second subnet
 	require.Contains(t, output, "10.0.1.0/24")
 	// total resources
-	require.Contains(t, output, "8 to add, 0 to change, 0 to destroy")
+	require.Contains(t, output, "11 to add, 0 to change, 0 to destroy")
 }
