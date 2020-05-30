@@ -12,7 +12,7 @@ import (
 
 func TestGithubIAMUsersModuleUnit(t *testing.T) {
 	terraformOptions := &terraform.Options{
-		TerraformDir: "../example",
+		TerraformDir: ".",
 		Logger:       logger.Discard,
 	}
 

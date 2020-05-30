@@ -17,7 +17,7 @@ type UserInfo struct {
 
 func TestGithubIAMUsersModuleIntegration(t *testing.T) {
 	terraformOptions := &terraform.Options{
-		TerraformDir: "../example",
+		TerraformDir: ".",
 		Logger:       logger.Discard,
 	}
 

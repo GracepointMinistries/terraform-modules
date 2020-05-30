@@ -12,7 +12,7 @@ import (
 
 func TestVPCModuleUnit(t *testing.T) {
 	terraformOptions := &terraform.Options{
-		TerraformDir: "../example",
+		TerraformDir: ".",
 		Logger:       logger.Discard,
 	}
 

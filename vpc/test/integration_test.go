@@ -21,7 +21,7 @@ type VPCInfo struct {
 
 func TestVPCModuleIntegration(t *testing.T) {
 	terraformOptions := &terraform.Options{
-		TerraformDir: "../example",
+		TerraformDir: ".",
 		Logger:       logger.Discard,
 	}
 

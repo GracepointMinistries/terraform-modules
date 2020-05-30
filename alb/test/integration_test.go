@@ -21,7 +21,7 @@ type ALBInfo struct {
 
 func TestALBModuleIntegration(t *testing.T) {
 	terraformOptions := &terraform.Options{
-		TerraformDir: "../example",
+		TerraformDir: ".",
 		Logger:       logger.Discard,
 	}
 
