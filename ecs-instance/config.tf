@@ -4,8 +4,8 @@ data "template_file" "cloud_config" {
   template = file("${path.module}/files/cloud-config.yaml")
 
   vars = {
-    region           = data.aws_region.current.name
     eip              = aws_eip.ip.id
+    region           = data.aws_region.current.name
     ebs_volume       = aws_ebs_volume.persistent.id
     ecs_cluster_name = var.ecs_cluster_name
     iam_group        = var.iam_group

@@ -13,13 +13,39 @@ module "vpc" {
   }
 }
 
+# create a junk subdomain for testing
+provider "random" {
+  version = "~> 2.2"
+}
+
+resource "random_id" "run" {
+  byte_length = 8
+}
+
+data "aws_route53_zone" "disposable" {
+  name = "disposable.gracepointonline.org."
+}
+
+resource "aws_route53_zone" "test_zone" {
+  name = "${random_id.run.hex}.disposable.gracepointonline.org"
+}
+
+resource "aws_route53_record" "test_zone" {
+  zone_id = data.aws_route53_zone.disposable.id
+  name    = aws_route53_zone.test_zone.name
+  type    = "NS"
+  ttl     = "30"
+
+  records = aws_route53_zone.test_zone.name_servers
+}
+
 module "alb" {
   source = "../"
 
   vpc_id               = module.vpc.vpc
   subnets              = module.vpc.subnet_ids
   security_groups      = [module.vpc.security_group]
-  domain               = "testing1.gracepointonline.org"
+  domain               = trimsuffix(aws_route53_zone.test_zone.name, ".")
   force_destroy_bucket = true
   tags = {
     Testing = "example alb"
@@ -28,4 +54,8 @@ module "alb" {
 
 output "alb_info" {
   value = jsonencode(module.alb)
+}
+
+output "subdomain" {
+  value = trimsuffix(aws_route53_zone.test_zone.name, ".")
 }

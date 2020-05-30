@@ -29,13 +29,14 @@ func TestALBModuleIntegration(t *testing.T) {
 	terraform.InitAndApply(t, terraformOptions)
 
 	output := terraform.Output(t, terraformOptions, "alb_info")
+	subdomain := terraform.Output(t, terraformOptions, "subdomain")
 
 	var albInfo ALBInfo
 	require.NoError(t, json.Unmarshal([]byte(output), &albInfo))
 
 	// from https://docs.aws.amazon.com/general/latest/gr/elb.html
 	require.Equal(t, "Z35SXDOTRQ7X7K", albInfo.ALBZone)
-	require.Equal(t, "testing1.gracepointonline.org", albInfo.Domain)
+	require.Equal(t, subdomain, albInfo.Domain)
 	require.NotEqual(t, "", albInfo.ListenerARN)
 	require.NotEqual(t, "", albInfo.Record)
 	require.NotEqual(t, "", albInfo.Zone)

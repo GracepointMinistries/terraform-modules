@@ -19,10 +19,8 @@ func TestALBModuleUnit(t *testing.T) {
 	terraform.Init(t, terraformOptions)
 	output := terraform.InitAndPlan(t, terraformOptions)
 
-	// wildcard check
-	require.Contains(t, output, "*.testing1.gracepointonline.org")
 	// proper principal resolution
 	require.Contains(t, output, "arn:aws:iam::127311923021:root")
 	// total resources
-	require.Contains(t, output, "27 to add, 0 to change, 0 to destroy")
+	require.Contains(t, output, "30 to add, 0 to change, 0 to destroy")
 }

@@ -1,0 +1,19 @@
+regions:
+  - eu-east-1
+  - global
+
+account-blacklist:
+  - 073644574500
+
+accounts:
+  583836587441:
+    filters:
+      IAMRole:
+        - property: Name
+          value: OrganizationAccountAccessRole
+      IAMRolePolicy:
+        - property: PolicyName
+          value: AdministratorAccess
+      Route53HostedZone:
+        - property: Name
+          value: disposable.gracepointonline.org.
